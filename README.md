@@ -66,26 +66,28 @@ Recurring follow-up:
 
 ## 🧪 Testing PawPal+
 
-```bash
-# Run the full test suite:
-pytest
+Run the automated test suite with:
 
-# Run with coverage:
-pytest --cov
+```bash
+python -m pytest
 ```
 
-Sample test output:
+These tests cover the core scheduler behaviors, including task sorting, recurring task creation, conflict detection, task completion, and filtering by pet and status.
+
+Successful test run output:
 
 ```text
 ============================= test session starts ==============================
 platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
 rootdir: /Users/queen/ai110-module2show-pawpal-starter
-collected 2 items
+collected 8 items
 
-tests/test_pawpal.py ..                                                  [100%]
+tests/test_pawpal.py ........                                            [100%]
 
-============================== 5 passed in 0.01s ===============================
+============================== 8 passed in 0.02s ===============================
 ```
+
+Confidence Level: ★★★★★
 
 ## 📐 Smarter Scheduling
 
