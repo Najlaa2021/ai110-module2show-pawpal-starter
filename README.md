@@ -72,7 +72,7 @@ Run the automated test suite with:
 python -m pytest
 ```
 
-These tests cover the core scheduler behaviors, including task sorting, recurring task creation, conflict detection, task completion, and filtering by pet and status.
+These tests cover the core scheduler behaviors, including task sorting, recurring task creation, conflict detection, task completion, filtering by pet and status, JSON persistence, and next-available-slot logic.
 
 Successful test run output:
 
@@ -80,23 +80,33 @@ Successful test run output:
 ============================= test session starts ==============================
 platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
 rootdir: /Users/queen/ai110-module2show-pawpal-starter
-collected 8 items
+collected 10 items
 
-tests/test_pawpal.py ........                                            [100%]
+tests/test_pawpal.py ..........                                            [100%]
 
-============================== 8 passed in 0.02s ===============================
+============================== 10 passed in 0.02s
 ```
 
 Confidence Level: ★★★★★
 
+## 💾 Data Persistence
+
+PawPal+ saves pets and tasks to `data.json` so your data persists between app runs.
+
+- `pawpal_system.py` implements `Owner.save_to_json(path)` and `Owner.load_from_json(path)`.
+- `app.py` loads saved state from `data.json` on startup and writes updates back whenever pets or tasks change.
+
+This means pets, task details, priorities, frequencies, and completion state are preserved across restarts.
+
 ## 📐 Smarter Scheduling
 
-The scheduler now includes lightweight intelligence for everyday pet-care planning:
+The scheduler now includes more advanced intelligence for everyday pet-care planning:
 
-- Sorting behavior: `Scheduler.sort_by_time()` orders tasks by scheduled time so the plan reads clearly.
-- Filtering behavior: `Scheduler.filter_tasks()` filters tasks by pet name and/or completion status.
-- Conflict detection logic: `Scheduler.detect_conflicts()` warns when two tasks share the same scheduled time.
+- Priority scheduling: `Scheduler.sort_by_priority_then_time()` orders tasks by priority first, then by scheduled time.
+- Time-based sorting: `Scheduler.sort_by_time()` still provides a chronological fallback view.
+- Conflict detection: `Scheduler.detect_conflicts()` warns when two tasks share the same scheduled time.
 - Recurring task logic: `Task.mark_complete_and_schedule_next()` creates the next daily or weekly occurrence after completion.
+- Next available slot: `Scheduler.find_next_available_slot()` locates the earliest free window for a given duration inside the owner's availability window.
 
 ## 🎬 Demo Walkthrough
 
