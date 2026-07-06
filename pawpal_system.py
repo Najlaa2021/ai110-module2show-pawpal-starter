@@ -33,7 +33,7 @@ class Task:
         self.completed = True
 
     def mark_complete_and_schedule_next(self, today: date) -> Optional["Task"]:
-        """Advance a recurring task to the next occurrence."""
+        """Mark a recurring task complete and create the next occurrence for daily or weekly tasks."""
         self.mark_complete()
         if not self.frequency:
             return None
@@ -198,7 +198,7 @@ class Scheduler:
         return plan.generate_schedule()
 
     def sort_by_time(self, tasks: List[Task]) -> List[Task]:
-        """Sort tasks by their scheduled time, falling back to title order."""
+        """Return tasks ordered by their scheduled time, using title order as a tiebreaker."""
         return sorted(
             tasks,
             key=lambda task: (
@@ -210,7 +210,7 @@ class Scheduler:
         )
 
     def filter_tasks(self, tasks: List[Task], pet_name: Optional[str] = None, completed: Optional[bool] = None) -> List[Task]:
-        """Filter tasks by pet name and/or completion status."""
+        """Filter tasks by pet name and/or completion status while preserving the original order."""
         filtered = list(tasks)
         if pet_name:
             filtered = [task for task in filtered if task.pet and task.pet.name.lower() == pet_name.lower()]
@@ -219,7 +219,7 @@ class Scheduler:
         return filtered
 
     def detect_conflicts(self, tasks: List[Task]) -> List[str]:
-        """Return lightweight warnings for tasks that share the same scheduled time."""
+        """Return lightweight warnings for tasks that share the same scheduled time slot."""
         warnings: List[str] = []
         seen = {}
         for task in tasks:

@@ -34,7 +34,8 @@
 **b. Tradeoffs**
 
 - One tradeoff in the current scheduler is that it only detects conflicts when two tasks share the exact same scheduled time, rather than when their time ranges overlap.
-- That is reasonable for this starter version because it keeps the conflict logic simple, readable, and fast while still catching the most obvious scheduling mistakes for a pet-care app.
+- I kept this approach because it makes the conflict check easier to read and explain, even though it is less precise than a full interval-overlap check.
+- For this starter version, that tradeoff is reasonable because it stays fast, simple, and suitable for a small pet-care scheduling app.
 
 ---
 

@@ -91,12 +91,10 @@ tests/test_pawpal.py ..                                                  [100%]
 
 The scheduler now includes lightweight intelligence for everyday pet-care planning:
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | `Scheduler.sort_by_time()` | Orders tasks by scheduled time so the plan reads clearly. |
-| Filtering | `Scheduler.filter_tasks()` | Filters tasks by pet name and completion state. |
-| Conflict detection | `Scheduler.detect_conflicts()` | Warns when two tasks share the same scheduled time. |
-| Recurring tasks | `Task.mark_complete_and_schedule_next()` | Creates the next daily or weekly occurrence after completion. |
+- Sorting behavior: `Scheduler.sort_by_time()` orders tasks by scheduled time so the plan reads clearly.
+- Filtering behavior: `Scheduler.filter_tasks()` filters tasks by pet name and/or completion status.
+- Conflict detection logic: `Scheduler.detect_conflicts()` warns when two tasks share the same scheduled time.
+- Recurring task logic: `Task.mark_complete_and_schedule_next()` creates the next daily or weekly occurrence after completion.
 
 ## 📸 Demo Walkthrough
 
