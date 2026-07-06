@@ -5,6 +5,17 @@ from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 
+def _time_to_minutes(value: Optional[str]) -> int:
+    """Convert an HH:MM string into minutes since midnight."""
+    if not value:
+        return 0
+    try:
+        hour_str, minute_str = value.split(":")
+        return int(hour_str) * 60 + int(minute_str)
+    except ValueError:
+        return 0
+
+
 @dataclass
 class Task:
     title: str
@@ -20,6 +31,30 @@ class Task:
     def mark_complete(self) -> None:
         """Mark the task completed."""
         self.completed = True
+
+    def mark_complete_and_schedule_next(self, today: date) -> Optional["Task"]:
+        """Advance a recurring task to the next occurrence."""
+        self.mark_complete()
+        if not self.frequency:
+            return None
+        next_due = None
+        if self.frequency.lower() == "daily":
+            next_due = today + timedelta(days=1)
+        elif self.frequency.lower() == "weekly":
+            next_due = today + timedelta(days=7)
+        if next_due is None:
+            return None
+        return Task(
+            title=self.title,
+            duration_minutes=self.duration_minutes,
+            priority=self.priority,
+            category=self.category,
+            description=self.description,
+            frequency=self.frequency,
+            scheduled_time=datetime.combine(next_due, datetime.min.time()),
+            completed=False,
+            pet=self.pet,
+        )
 
     def reschedule(self, scheduled_time: datetime) -> None:
         """Set a new scheduled time for the task."""
@@ -161,4 +196,41 @@ class Scheduler:
         """Generate and return the scheduled tasks for the date."""
         plan = self.build_plan(plan_date)
         return plan.generate_schedule()
+
+    def sort_by_time(self, tasks: List[Task]) -> List[Task]:
+        """Sort tasks by their scheduled time, falling back to title order."""
+        return sorted(
+            tasks,
+            key=lambda task: (
+                task.scheduled_time.time().hour * 60 + task.scheduled_time.time().minute
+                if task.scheduled_time
+                else 24 * 60,
+                task.title,
+            ),
+        )
+
+    def filter_tasks(self, tasks: List[Task], pet_name: Optional[str] = None, completed: Optional[bool] = None) -> List[Task]:
+        """Filter tasks by pet name and/or completion status."""
+        filtered = list(tasks)
+        if pet_name:
+            filtered = [task for task in filtered if task.pet and task.pet.name.lower() == pet_name.lower()]
+        if completed is not None:
+            filtered = [task for task in filtered if task.completed is completed]
+        return filtered
+
+    def detect_conflicts(self, tasks: List[Task]) -> List[str]:
+        """Return lightweight warnings for tasks that share the same scheduled time."""
+        warnings: List[str] = []
+        seen = {}
+        for task in tasks:
+            if task.scheduled_time is None:
+                continue
+            key = task.scheduled_time.strftime("%H:%M")
+            if key in seen:
+                warnings.append(
+                    f"Conflict: {seen[key].title} and {task.title} are both scheduled at {key}."
+                )
+            else:
+                seen[key] = task
+        return warnings
 

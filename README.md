@@ -47,10 +47,21 @@ pip install -r requirements.txt
 The CLI demo script produces a readable daily schedule in the terminal:
 
 ```text
-Today's Schedule for Jordan (2026-07-05):
-08:00 — Feeding for Mochi (10 min) [priority: high]
-08:10 — Morning walk for Mochi (30 min) [priority: high]
-08:40 — Grooming for Biscuit (20 min) [priority: low]
+Sorted tasks:
+- 08:30 — Feeding (10 min)
+- 08:30 — Grooming (20 min)
+- 09:00 — Morning walk (30 min)
+- 10:00 — Daily meds (5 min)
+
+Pending tasks for Mochi:
+- Feeding
+- Morning walk
+
+Conflicts:
+- Conflict: Feeding and Grooming are both scheduled at 08:30.
+
+Recurring follow-up:
+- Created Daily meds for Biscuit
 ```
 
 ## 🧪 Testing PawPal+
@@ -73,19 +84,19 @@ collected 2 items
 
 tests/test_pawpal.py ..                                                  [100%]
 
-============================== 2 passed in 0.01s ===============================
+============================== 5 passed in 0.01s ===============================
 ```
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+The scheduler now includes lightweight intelligence for everyday pet-care planning:
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()` | Orders tasks by scheduled time so the plan reads clearly. |
+| Filtering | `Scheduler.filter_tasks()` | Filters tasks by pet name and completion state. |
+| Conflict detection | `Scheduler.detect_conflicts()` | Warns when two tasks share the same scheduled time. |
+| Recurring tasks | `Task.mark_complete_and_schedule_next()` | Creates the next daily or weekly occurrence after completion. |
 
 ## 📸 Demo Walkthrough
 

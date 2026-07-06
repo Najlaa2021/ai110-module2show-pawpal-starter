@@ -33,8 +33,8 @@
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+- One tradeoff in the current scheduler is that it only detects conflicts when two tasks share the exact same scheduled time, rather than when their time ranges overlap.
+- That is reasonable for this starter version because it keeps the conflict logic simple, readable, and fast while still catching the most obvious scheduling mistakes for a pet-care app.
 
 ---
 
