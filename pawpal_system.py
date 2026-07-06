@@ -11,20 +11,22 @@ class Task:
     duration_minutes: int
     priority: str = "medium"
     category: str = "general"
+    description: Optional[str] = None
+    frequency: Optional[str] = None
     scheduled_time: Optional[datetime] = None
     completed: bool = False
     pet: Optional["Pet"] = None
 
     def mark_complete(self) -> None:
-        """Mark this task as completed."""
+        """Mark the task completed."""
         self.completed = True
 
     def reschedule(self, scheduled_time: datetime) -> None:
-        """Move the task to a new scheduled time."""
+        """Set a new scheduled time for the task."""
         self.scheduled_time = scheduled_time
 
     def update_priority(self, priority: str) -> None:
-        """Adjust the task priority."""
+        """Update the task's priority level."""
         self.priority = priority
 
 
@@ -37,12 +39,12 @@ class Pet:
     tasks: List[Task] = field(default_factory=list)
 
     def add_task(self, task: Task) -> None:
-        """Add a new task to this pet."""
+        """Add a Task to this pet and set ownership."""
         task.pet = self
         self.tasks.append(task)
 
     def remove_task(self, title: str) -> None:
-        """Remove a task by title."""
+        """Remove a Task by its title."""
         for i, t in enumerate(self.tasks):
             if t.title == title:
                 self.tasks.pop(i)
@@ -51,7 +53,7 @@ class Pet:
         raise ValueError(f"Task with title '{title}' not found")
 
     def update_preferences(self, preferences: List[str]) -> None:
-        """Replace the pet's preferences."""
+        """Replace this pet's preference list."""
         self.preferences = preferences
 
 
@@ -63,11 +65,11 @@ class Owner:
     pets: List[Pet] = field(default_factory=list)
 
     def add_pet(self, pet: Pet) -> None:
-        """Add a pet to the owner's profile."""
+        """Add a Pet to the owner's list."""
         self.pets.append(pet)
 
     def remove_pet(self, name: str) -> None:
-        """Remove a pet by name."""
+        """Remove a Pet by name."""
         for i, p in enumerate(self.pets):
             if p.name == name:
                 self.pets.pop(i)
@@ -86,16 +88,16 @@ class DailyPlan:
     tasks: List[Task] = field(default_factory=list)
 
     def add_task(self, task: Task) -> None:
-        """Add a task to the day's plan."""
+        """Add a Task to this DailyPlan."""
         self.tasks.append(task)
 
     def sort_tasks(self) -> None:
-        """Sort tasks based on priority and duration."""
+        """Sort tasks by priority (high→low) then by duration (shorter first)."""
         priority_rank = {"high": 3, "medium": 2, "low": 1}
         self.tasks.sort(key=lambda t: (-priority_rank.get(t.priority, 2), t.duration_minutes))
 
     def generate_schedule(self) -> List[Task]:
-        """Create the ordered task list for the day."""
+        """Assemble and schedule tasks sequentially within owner's availability."""
         # If no tasks were explicitly added to the plan, collect all tasks from the owner's pets
         if not self.tasks:
             for pet in self.owner.pets:
@@ -132,3 +134,31 @@ class DailyPlan:
             lines.append(f"{time_str} — {t.title} ({t.duration_minutes} min) [priority: {t.priority}]")
 
         return "\n".join(lines)
+
+
+class Scheduler:
+    """The scheduler coordinates owners, pets, and daily plans."""
+
+    def __init__(self, owner: Owner):
+        """Create a scheduler for an owner."""
+        self.owner = owner
+
+    def collect_tasks(self) -> List[Task]:
+        """Return all tasks across the owner's pets."""
+        tasks: List[Task] = []
+        for pet in self.owner.pets:
+            tasks.extend(pet.tasks)
+        return tasks
+
+    def build_plan(self, plan_date: date) -> DailyPlan:
+        """Create a DailyPlan for the given date using owner's tasks."""
+        plan = DailyPlan(owner=self.owner, date=plan_date)
+        for t in self.collect_tasks():
+            plan.add_task(t)
+        return plan
+
+    def schedule(self, plan_date: date) -> List[Task]:
+        """Generate and return the scheduled tasks for the date."""
+        plan = self.build_plan(plan_date)
+        return plan.generate_schedule()
+
