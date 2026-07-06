@@ -4,13 +4,22 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+- My initial design for PawPal+ centers on a small logic layer with four main classes: Owner, Pet, Task, and DailyPlan.
+- The Owner represents the person using the app and manages the pets they care for. The Pet represents an individual animal and holds its profile and care tasks. The Task represents a single care activity such as a walk, meal, medication, or grooming session. The DailyPlan collects the tasks chosen for a specific day and will eventually produce a schedule.
+- The three core actions a user should be able to perform are:
+  - Add a pet to their account.
+  - Create or edit a care task for a pet, such as scheduling a walk.
+  - Review today's tasks or the generated daily plan.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+- I kept the first version intentionally simple so the design would stay focused on the core domain objects and their relationships.
+- I chose to make Task and Pet data-oriented objects with small methods so the logic layer stays clear and easy to test as the app grows.
+- The main building blocks I identified are:
+  - Owner: attributes include name, availability minutes, preferred time window, and a list of pets; methods include adding/removing pets and creating a daily plan.
+  - Pet: attributes include name, species, age, preferences, and a list of tasks; methods include adding/removing tasks and updating preferences.
+  - Task: attributes include title, duration, priority, category, scheduled time, and completion status; methods include marking a task complete, rescheduling it, and updating its priority.
+  - DailyPlan: attributes include the owner, a date, and a list of tasks; methods include adding tasks, sorting them, generating a schedule, and explaining the plan.
 
 ---
 
