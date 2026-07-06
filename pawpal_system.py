@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import List, Optional
@@ -14,6 +15,20 @@ def _time_to_minutes(value: Optional[str]) -> int:
         return int(hour_str) * 60 + int(minute_str)
     except ValueError:
         return 0
+
+
+def _datetime_to_iso(value: Optional[datetime]) -> Optional[str]:
+    return value.isoformat() if value else None
+
+
+def _datetime_from_iso(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    return datetime.fromisoformat(value)
+
+
+def _normalize_priority(priority: str) -> str:
+    return priority.lower() if priority else "medium"
 
 
 @dataclass
@@ -64,6 +79,35 @@ class Task:
         """Update the task's priority level."""
         self.priority = priority
 
+    def to_dict(self) -> dict:
+        """Serialize this Task to a JSON-compatible dictionary."""
+        return {
+            "title": self.title,
+            "duration_minutes": self.duration_minutes,
+            "priority": self.priority,
+            "category": self.category,
+            "description": self.description,
+            "frequency": self.frequency,
+            "scheduled_time": _datetime_to_iso(self.scheduled_time),
+            "completed": self.completed,
+        }
+
+    @staticmethod
+    def from_dict(data: dict, pet: Optional["Pet"] = None) -> "Task":
+        """Deserialize a Task from a dictionary."""
+        task = Task(
+            title=data["title"],
+            duration_minutes=data["duration_minutes"],
+            priority=_normalize_priority(data.get("priority", "medium")),
+            category=data.get("category", "general"),
+            description=data.get("description"),
+            frequency=data.get("frequency"),
+            scheduled_time=_datetime_from_iso(data.get("scheduled_time")),
+            completed=data.get("completed", False),
+        )
+        task.pet = pet
+        return task
+
 
 @dataclass
 class Pet:
@@ -91,6 +135,29 @@ class Pet:
         """Replace this pet's preference list."""
         self.preferences = preferences
 
+    def to_dict(self) -> dict:
+        """Serialize this Pet to a JSON-compatible dictionary."""
+        return {
+            "name": self.name,
+            "species": self.species,
+            "age": self.age,
+            "preferences": self.preferences,
+            "tasks": [task.to_dict() for task in self.tasks],
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Pet":
+        """Deserialize a Pet from a dictionary."""
+        pet = Pet(
+            name=data["name"],
+            species=data.get("species", "other"),
+            age=data.get("age"),
+            preferences=data.get("preferences", []),
+        )
+        for task_data in data.get("tasks", []):
+            pet.add_task(Task.from_dict(task_data, pet=pet))
+        return pet
+
 
 @dataclass
 class Owner:
@@ -114,6 +181,39 @@ class Owner:
     def create_daily_plan(self, plan_date: date) -> "DailyPlan":
         """Create a day plan for this owner."""
         return DailyPlan(owner=self, date=plan_date)
+
+    def to_dict(self) -> dict:
+        """Serialize this Owner to a JSON-compatible dictionary."""
+        return {
+            "name": self.name,
+            "availability_minutes": self.availability_minutes,
+            "preferred_time_window": self.preferred_time_window,
+            "pets": [pet.to_dict() for pet in self.pets],
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "Owner":
+        """Deserialize an Owner from a dictionary."""
+        owner = Owner(
+            name=data.get("name", ""),
+            availability_minutes=data.get("availability_minutes", 240),
+            preferred_time_window=data.get("preferred_time_window"),
+        )
+        for pet_data in data.get("pets", []):
+            owner.add_pet(Pet.from_dict(pet_data))
+        return owner
+
+    def save_to_json(self, path: str) -> None:
+        """Save owner, pets, and tasks to a JSON file."""
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(self.to_dict(), handle, indent=2)
+
+    @staticmethod
+    def load_from_json(path: str) -> "Owner":
+        """Load an owner, pets, and tasks from a JSON file."""
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return Owner.from_dict(data)
 
 
 @dataclass
@@ -186,10 +286,11 @@ class Scheduler:
         return tasks
 
     def build_plan(self, plan_date: date) -> DailyPlan:
-        """Create a DailyPlan for the given date using owner's tasks."""
+        """Create a DailyPlan for the given date using the owner's pending tasks."""
         plan = DailyPlan(owner=self.owner, date=plan_date)
         for t in self.collect_tasks():
-            plan.add_task(t)
+            if not t.completed:
+                plan.add_task(t)
         return plan
 
     def schedule(self, plan_date: date) -> List[Task]:
@@ -208,6 +309,46 @@ class Scheduler:
                 task.title,
             ),
         )
+
+    def sort_by_priority_then_time(self, tasks: List[Task]) -> List[Task]:
+        """Sort tasks by priority first, then by scheduled time and title."""
+        priority_rank = {"high": 3, "medium": 2, "low": 1}
+        return sorted(
+            tasks,
+            key=lambda task: (
+                -priority_rank.get(task.priority.lower(), 2),
+                task.scheduled_time.time().hour * 60 + task.scheduled_time.time().minute
+                if task.scheduled_time
+                else 24 * 60,
+                task.title,
+            ),
+        )
+
+    def find_next_available_slot(
+        self, duration_minutes: int, after: Optional[datetime] = None
+    ) -> Optional[datetime]:
+        """Find the next available start time for a duration within the owner's availability."""
+        if after is None:
+            reference_date = date.today()
+            current = datetime(reference_date.year, reference_date.month, reference_date.day, 8, 0)
+        else:
+            current = after
+
+        end_of_day = current.replace(hour=8, minute=0) + timedelta(minutes=self.owner.availability_minutes)
+        available_tasks = [task for task in self.sort_by_time(self.collect_tasks()) if task.scheduled_time]
+
+        for task in available_tasks:
+            task_start = task.scheduled_time
+            task_end = task_start + timedelta(minutes=task.duration_minutes)
+            if task_start >= current:
+                gap = int((task_start - current).total_seconds() / 60)
+                if gap >= duration_minutes:
+                    return current
+                current = max(current, task_end)
+
+        if current + timedelta(minutes=duration_minutes) <= end_of_day:
+            return current
+        return None
 
     def filter_tasks(self, tasks: List[Task], pet_name: Optional[str] = None, completed: Optional[bool] = None) -> List[Task]:
         """Filter tasks by pet name and/or completion status while preserving the original order."""
