@@ -67,11 +67,17 @@ if pet_options:
     task_title = st.text_input("Task title", key="task_title_input")
     duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20, key="task_duration")
     priority = st.selectbox("Priority", ["low", "medium", "high"], index=2, key="task_priority")
+    frequency = st.selectbox("Frequency", ["once", "daily", "weekly"], key="task_frequency")
 
     if st.button("Add task"):
         if task_title.strip():
             selected_pet = next(pet for pet in owner.pets if pet.name == selected_pet_name)
-            task = Task(title=task_title.strip(), duration_minutes=int(duration), priority=priority)
+            task = Task(
+                title=task_title.strip(),
+                duration_minutes=int(duration),
+                priority=priority,
+                frequency=None if frequency == "once" else frequency,
+            )
             selected_pet.add_task(task)
             st.success(f"Added '{task.title}' for {selected_pet.name}.")
             st.session_state.task_title_input = ""
@@ -82,7 +88,7 @@ if pet_options:
         if pet.tasks:
             st.write(f"{pet.name}'s tasks:")
             for task in pet.tasks:
-                st.write(f"- {task.title} ({task.duration_minutes} min, {task.priority})")
+                st.write(f"- {task.title} ({task.duration_minutes} min, {task.priority}, {'completed' if task.completed else 'pending'})")
 else:
     st.info("Add a pet first, then you can add tasks.")
 
@@ -91,12 +97,21 @@ st.divider()
 st.subheader("Build Schedule")
 if st.button("Generate schedule"):
     scheduler = Scheduler(owner)
-    scheduled = scheduler.schedule(date.today())
-    if scheduled:
+    all_tasks = scheduler.collect_tasks()
+    sorted_tasks = scheduler.sort_by_time(all_tasks)
+    filtered_tasks = scheduler.filter_tasks(sorted_tasks, pet_name=None, completed=False)
+    conflicts = scheduler.detect_conflicts(sorted_tasks)
+
+    if filtered_tasks:
         st.write(f"Today's schedule for {owner.name}:")
-        for task in scheduled:
+        for task in filtered_tasks:
             pet_name = task.pet.name if task.pet else "unknown"
             time_str = task.scheduled_time.strftime("%H:%M") if task.scheduled_time else "unscheduled"
             st.write(f"- {time_str} — {task.title} for {pet_name} ({task.duration_minutes} min) [priority: {task.priority}]")
     else:
-        st.info("No tasks to schedule yet.")
+        st.info("No pending tasks to schedule yet.")
+
+    if conflicts:
+        st.warning("Conflict warnings:")
+        for warning in conflicts:
+            st.write(f"- {warning}")
