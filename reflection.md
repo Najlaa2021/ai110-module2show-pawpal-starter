@@ -14,6 +14,7 @@
 **b. Design changes**
 
 - I kept the first version intentionally simple so the design would stay focused on the core domain objects and their relationships.
+- I reviewed the class skeleton and noticed that a task should clearly belong to a specific pet, rather than only being stored inside a pet list. That led me to add an explicit pet reference on the Task class so the ownership is easier to understand and later use in scheduling logic.
 - I chose to make Task and Pet data-oriented objects with small methods so the logic layer stays clear and easy to test as the app grows.
 - The main building blocks I identified are:
   - Owner: attributes include name, availability minutes, preferred time window, and a list of pets; methods include adding/removing pets and creating a daily plan.

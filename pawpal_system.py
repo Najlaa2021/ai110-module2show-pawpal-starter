@@ -13,6 +13,7 @@ class Task:
     category: str = "general"
     scheduled_time: Optional[datetime] = None
     completed: bool = False
+    pet: Optional["Pet"] = None
 
     def mark_complete(self) -> None:
         """Mark this task as completed."""
@@ -37,7 +38,8 @@ class Pet:
 
     def add_task(self, task: Task) -> None:
         """Add a new task to this pet."""
-        pass
+        task.pet = self
+        self.tasks.append(task)
 
     def remove_task(self, title: str) -> None:
         """Remove a task by title."""
