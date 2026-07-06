@@ -98,14 +98,43 @@ The scheduler now includes lightweight intelligence for everyday pet-care planni
 - Conflict detection logic: `Scheduler.detect_conflicts()` warns when two tasks share the same scheduled time.
 - Recurring task logic: `Task.mark_complete_and_schedule_next()` creates the next daily or weekly occurrence after completion.
 
-## 📸 Demo Walkthrough
+## 🎬 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+PawPal+ is designed as a simple, human-friendly pet-care planning tool. A user can add pets, create tasks, and generate a day plan without needing to understand the full scheduling engine behind the scenes.
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. Open the Streamlit app and enter an owner name.
+2. Add one or more pets to the profile, then create care tasks such as feeding, walks, grooming, or medication.
+3. Use the schedule view to generate a sorted plan for the day. The app shows pending tasks in chronological order and highlights any time-slot conflicts.
+4. Mark recurring tasks as complete to create the next daily or weekly follow-up automatically.
+5. Review the generated schedule in a table, filter it by pet, and use the warnings to adjust overlapping tasks.
 
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+### Example workflow
+
+Add a pet → create a feeding task → add a walk task → generate the schedule → review the sorted plan and any conflict warnings.
+
+### Scheduler behaviors shown in the demo
+
+- Sorting by time: tasks are ordered chronologically in the generated schedule.
+- Conflict warnings: duplicate time slots are flagged clearly for the user.
+- Daily recurrence: completing a recurring task creates the next occurrence automatically.
+- Pet filtering: the schedule can be viewed for all pets or one specific pet.
+
+### Sample CLI output
+
+```text
+Sorted tasks:
+- 08:30 — Feeding (10 min)
+- 08:30 — Grooming (20 min)
+- 09:00 — Morning walk (30 min)
+- 10:00 — Daily meds (5 min)
+
+Pending tasks for Mochi:
+- Feeding
+- Morning walk
+
+Conflicts:
+- Conflict: Feeding and Grooming are both scheduled at 08:30.
+
+Recurring follow-up:
+- Created Daily meds for Biscuit
+```

@@ -105,23 +105,42 @@ else:
 st.divider()
 
 st.subheader("Build Schedule")
+if owner.pets:
+    selected_schedule_pet = st.selectbox("View schedule for", ["All pets", *[pet.name for pet in owner.pets]], key="schedule_pet_filter")
+else:
+    selected_schedule_pet = "All pets"
+
 if st.button("Generate schedule"):
     scheduler = Scheduler(owner)
     all_tasks = scheduler.collect_tasks()
     sorted_tasks = scheduler.sort_by_time(all_tasks)
-    filtered_tasks = scheduler.filter_tasks(sorted_tasks, pet_name=None, completed=False)
+    pet_filter = None if selected_schedule_pet == "All pets" else selected_schedule_pet
+    filtered_tasks = scheduler.filter_tasks(sorted_tasks, pet_name=pet_filter, completed=False)
     conflicts = scheduler.detect_conflicts(sorted_tasks)
 
     if filtered_tasks:
-        st.write(f"Today's schedule for {owner.name}:")
+        st.success("Schedule generated. Pending tasks were sorted by time and filtered for the day.")
+        schedule_rows = []
         for task in filtered_tasks:
             pet_name = task.pet.name if task.pet else "unknown"
             time_str = task.scheduled_time.strftime("%H:%M") if task.scheduled_time else "unscheduled"
-            st.write(f"- {time_str} — {task.title} for {pet_name} ({task.duration_minutes} min) [priority: {task.priority}]")
+            schedule_rows.append(
+                {
+                    "Time": time_str,
+                    "Task": task.title,
+                    "Pet": pet_name,
+                    "Priority": task.priority,
+                    "Duration (min)": task.duration_minutes,
+                }
+            )
+        st.dataframe(schedule_rows, use_container_width=True, hide_index=True)
     else:
         st.info("No pending tasks to schedule yet.")
 
     if conflicts:
-        st.warning("Conflict warnings:")
+        st.warning("Conflict warnings")
         for warning in conflicts:
             st.write(f"- {warning}")
+        st.caption("These tasks share the same time slot. Consider moving one earlier or later so the plan stays clear for the pet owner.")
+    else:
+        st.caption("No scheduling conflicts detected for the current task list.")

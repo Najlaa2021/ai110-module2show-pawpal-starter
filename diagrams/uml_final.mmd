@@ -1,0 +1,66 @@
+classDiagram
+    class Owner {
+        +name: str
+        +availability_minutes: int
+        +preferred_time_window: Optional[str]
+        +pets: List[Pet]
+        +add_pet(pet)
+        +remove_pet(name)
+        +create_daily_plan(plan_date)
+    }
+
+    class Pet {
+        +name: str
+        +species: str
+        +age: Optional[int]
+        +preferences: List[str]
+        +tasks: List[Task]
+        +add_task(task)
+        +remove_task(title)
+        +update_preferences(preferences)
+    }
+
+    class Task {
+        +title: str
+        +duration_minutes: int
+        +priority: str
+        +category: str
+        +description: Optional[str]
+        +frequency: Optional[str]
+        +scheduled_time: Optional[datetime]
+        +completed: bool
+        +pet: Optional[Pet]
+        +mark_complete()
+        +mark_complete_and_schedule_next(today)
+        +reschedule(scheduled_time)
+        +update_priority(priority)
+    }
+
+    class DailyPlan {
+        +owner: Owner
+        +date: date
+        +tasks: List[Task]
+        +add_task(task)
+        +sort_tasks()
+        +generate_schedule()
+        +explain_plan()
+    }
+
+    class Scheduler {
+        +owner: Owner
+        +__init__(owner)
+        +collect_tasks()
+        +build_plan(plan_date)
+        +schedule(plan_date)
+        +sort_by_time(tasks)
+        +filter_tasks(tasks, pet_name, completed)
+        +detect_conflicts(tasks)
+    }
+
+    Owner "1" --> "0..*" Pet : manages
+    Pet "1" --> "0..*" Task : includes
+    Task --> Pet : belongs to
+    DailyPlan "1" --> "0..*" Task : contains
+    DailyPlan --> Owner : belongs to
+    Scheduler --> Owner : coordinates
+    Scheduler --> Task : inspects
