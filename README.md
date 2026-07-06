@@ -65,8 +65,15 @@ pytest --cov
 
 Sample test output:
 
-```
-# Paste your pytest output here
+```text
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/queen/ai110-module2show-pawpal-starter
+collected 2 items
+
+tests/test_pawpal.py ..                                                  [100%]
+
+============================== 2 passed in 0.01s ===============================
 ```
 
 ## 📐 Smarter Scheduling
