@@ -88,7 +88,17 @@ if pet_options:
         if pet.tasks:
             st.write(f"{pet.name}'s tasks:")
             for task in pet.tasks:
-                st.write(f"- {task.title} ({task.duration_minutes} min, {task.priority}, {'completed' if task.completed else 'pending'})")
+                task_label = f"- {task.title} ({task.duration_minutes} min, {task.priority}, {'completed' if task.completed else 'pending'})"
+                st.write(task_label)
+                if task.frequency and task.completed is False:
+                    if st.button(f"Complete: {task.title}", key=f"complete_{pet.name}_{task.title}"):
+                        next_task = task.mark_complete_and_schedule_next(date.today())
+                        if next_task is not None:
+                            pet.add_task(next_task)
+                            st.success(f"Completed {task.title} and created the next {task.frequency} occurrence.")
+                        else:
+                            task.mark_complete()
+                            st.success(f"Marked {task.title} as complete.")
 else:
     st.info("Add a pet first, then you can add tasks.")
 
